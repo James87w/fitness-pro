@@ -1,0 +1,270 @@
+[
+  { "name": "Barbell Bench Press", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Chest", "Secondary": ["Triceps", "Front Delts"] } },
+  { "name": "Incline Barbell Bench Press", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Upper Chest", "Secondary": ["Triceps", "Front Delts"] } },
+  { "name": "Decline Barbell Bench Press", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Chest", "Secondary": ["Triceps"] } },
+  { "name": "Dumbbell Bench Press", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Chest", "Secondary": ["Triceps", "Front Delts"] } },
+  { "name": "Incline Dumbbell Press", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Upper Chest", "Secondary": ["Triceps", "Front Delts"] } },
+  { "name": "Dumbbell Fly", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Chest", "Secondary": ["Front Delts"] } },
+  { "name": "Cable Crossover", "type": "weight_reps", "equipment": "Cable", "muscles": { "Primary": "Chest", "Secondary": [] } },
+  { "name": "Pec Deck / Machine Fly", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Chest", "Secondary": ["Front Delts"] } },
+  { "name": "Push-ups", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Chest", "Secondary": ["Triceps", "Core", "Front Delts"] } },
+  { "name": "Dips", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Chest", "Secondary": ["Triceps", "Front Delts"] } },
+  { "name": "Barbell Deadlift", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Lower Back", "Secondary": ["Hamstrings", "Glutes", "Traps", "Forearms"] } },
+  { "name": "Pull-ups", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Lats", "Secondary": ["Biceps", "Forearms"] } },
+  { "name": "Chin-ups", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Lats", "Secondary": ["Biceps"] } },
+  { "name": "Lat Pulldown", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Lats", "Secondary": ["Biceps"] } },
+  { "name": "Bent Over Barbell Row", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Middle Back", "Secondary": ["Lats", "Biceps", "Lower Back"] } },
+  { "name": "Seated Cable Row", "type": "weight_reps", "equipment": "Cable", "muscles": { "Primary": "Middle Back", "Secondary": ["Lats", "Biceps"] } },
+  { "name": "Single-Arm Dumbbell Row", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Lats", "Secondary": ["Biceps", "Rear Delts"] } },
+  { "name": "T-Bar Row", "type": "weight_reps", "equipment": "Other", "muscles": { "Primary": "Middle Back", "Secondary": ["Lats", "Biceps"] } },
+  { "name": "Face Pull", "type": "weight_reps", "equipment": "Cable", "muscles": { "Primary": "Rear Delts", "Secondary": ["Rotator Cuff", "Traps"] } },
+  { "name": "Barbell Shrug", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Traps", "Secondary": ["Forearms"] } },
+  { "name": "Barbell Squat", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Quads", "Secondary": ["Glutes", "Hamstrings", "Core", "Lower Back"] } },
+  { "name": "Front Squat", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Quads", "Secondary": ["Glutes", "Core"] } },
+  { "name": "Leg Press", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Quads", "Secondary": ["Glutes"] } },
+  { "name": "Goblet Squat", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Quads", "Secondary": ["Glutes", "Core"] } },
+  { "name": "Walking Lunges", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Quads", "Secondary": ["Glutes", "Hamstrings"] } },
+  { "name": "Bulgarian Split Squat", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Quads", "Secondary": ["Glutes"] } },
+  { "name": "Leg Extension", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Quads", "Secondary": [] } },
+  { "name": "Romanian Deadlift (RDL)", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Hamstrings", "Secondary": ["Glutes", "Lower Back"] } },
+  { "name": "Lying Leg Curl", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Hamstrings", "Secondary": [] } },
+  { "name": "Seated Leg Curl", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Hamstrings", "Secondary": [] } },
+  { "name": "Hip Thrust", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Glutes", "Secondary": ["Hamstrings"] } },
+  { "name": "Standing Calf Raise", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Calves", "Secondary": [] } },
+  { "name": "Seated Calf Raise", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Soleus", "Secondary": [] } },
+  { "name": "Overhead Press (OHP)", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Front Delts", "Secondary": ["Triceps", "Core"] } },
+  { "name": "Seated Dumbbell Press", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Front Delts", "Secondary": ["Triceps"] } },
+  { "name": "Arnold Press", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Front Delts", "Secondary": ["Side Delts", "Triceps"] } },
+  { "name": "Lateral Raise", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Side Delts", "Secondary": [] } },
+  { "name": "Cable Lateral Raise", "type": "weight_reps", "equipment": "Cable", "muscles": { "Primary": "Side Delts", "Secondary": [] } },
+  { "name": "Front Raise", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Front Delts", "Secondary": [] } },
+  { "name": "Rear Delt Fly (Reverse Fly)", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Rear Delts", "Secondary": ["Middle Back"] } },
+  { "name": "Reverse Pec Deck", "type": "weight_reps", "equipment": "Machine", "muscles": { "Primary": "Rear Delts", "Secondary": ["Middle Back"] } },
+  { "name": "Upright Row", "type": "weight_reps", "equipment": "EZ Curl Bar", "muscles": { "Primary": "Side Delts", "Secondary": ["Traps", "Biceps"] } },
+  { "name": "Barbell Curl", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Biceps", "Secondary": ["Forearms"] } },
+  { "name": "Dumbbell Curl", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Biceps", "Secondary": ["Forearms"] } },
+  { "name": "Hammer Curl", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Biceps", "Secondary": ["Forearms"] } },
+  { "name": "Preacher Curl", "type": "weight_reps", "equipment": "EZ Curl Bar", "muscles": { "Primary": "Biceps", "Secondary": [] } },
+  { "name": "Incline Dumbbell Curl", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Biceps", "Secondary": [] } },
+  { "name": "Tricep Pushdown (Rope)", "type": "weight_reps", "equipment": "Cable", "muscles": { "Primary": "Triceps", "Secondary": [] } },
+  { "name": "Skullcrusher", "type": "weight_reps", "equipment": "EZ Curl Bar", "muscles": { "Primary": "Triceps", "Secondary": [] } },
+  { "name": "Overhead Tricep Extension", "type": "weight_reps", "equipment": "Dumbbell", "muscles": { "Primary": "Triceps", "Secondary": [] } },
+  { "name": "Tricep Dips", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Triceps", "Secondary": ["Chest", "Front Delts"] } },
+  { "name": "Close-Grip Bench Press", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Triceps", "Secondary": ["Chest", "Front Delts"] } },
+  { "name": "Plank", "type": "duration", "equipment": "Bodyweight", "muscles": { "Primary": "Abs", "Secondary": ["Core"] } },
+  { "name": "Side Plank", "type": "duration", "equipment": "Bodyweight", "muscles": { "Primary": "Obliques", "Secondary": ["Core"] } },
+  { "name": "Crunches", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Abs", "Secondary": [] } },
+  { "name": "Hanging Leg Raise", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Abs", "Secondary": ["Hip Abductors"] } },
+  { "name": "Russian Twist", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Obliques", "Secondary": ["Abs"] } },
+  { "name": "Ab Wheel Rollout", "type": "bodyweight_reps", "equipment": "Other", "muscles": { "Primary": "Abs", "Secondary": ["Lats", "Core"] } },
+  { "name": "Cable Woodchopper", "type": "weight_reps", "equipment": "Cable", "muscles": { "Primary": "Obliques", "Secondary": ["Core"] } },
+  { "name": "V-ups", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Abs", "Secondary": ["Hip Abductors"] } },
+  { "name": "Running (Treadmill)", "type": "distance_duration", "equipment": "Cardio Machine", "muscles": { "Primary": "Cardio", "Secondary": ["Legs"] } },
+  { "name": "Rowing Machine", "type": "distance_duration", "equipment": "Cardio Machine", "muscles": { "Primary": "Cardio", "Secondary": ["Back", "Legs"] } },
+  { "name": "Cycling", "type": "distance_duration", "equipment": "Cardio Machine", "muscles": { "Primary": "Cardio", "Secondary": ["Quads"] } },
+  { "name": "Elliptical", "type": "duration", "equipment": "Cardio Machine", "muscles": { "Primary": "Cardio", "Secondary": [] } },
+  { "name": "Jump Rope", "type": "duration", "equipment": "Other", "muscles": { "Primary": "Cardio", "Secondary": ["Calves"] } },
+  { "name": "Burpees", "type": "bodyweight_reps", "equipment": "Bodyweight", "muscles": { "Primary": "Full Body", "Secondary": ["Cardio"] } },
+  { "name": "Clean and Jerk", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Full Body", "Secondary": ["Quads", "Shoulders", "Back"] } },
+  { "name": "Snatch", "type": "weight_reps", "equipment": "Olympic Barbell", "muscles": { "Primary": "Full Body", "Secondary": ["Shoulders", "Back", "Legs"] } },
+  { "name": "Farmers Walk", "type": "distance_duration", "equipment": "Dumbbell", "muscles": { "Primary": "Full Body", "Secondary": ["Forearms", "Traps", "Core"] } },
+  { "name": "Kettlebell Swing", "type": "weight_reps", "equipment": "Kettlebell", "muscles": { "Primary": "Glutes", "Secondary": ["Hamstrings", "Lower Back", "Shoulders"] } },
+  {
+    "name": "Machine Hip Abduction",
+    "type": "weight_reps",
+    "equipment": "Machine",
+    "muscles": {
+      "Primary": "Gluteus Medius",
+      "Secondary": ["Gluteus Maximus"]
+    }
+  },
+  {
+    "name": "Machine Hip Adduction",
+    "type": "weight_reps",
+    "equipment": "Machine",
+    "muscles": {
+      "Primary": "Adductors",
+      "Secondary": ["Hamstrings"]
+    }
+  },
+  {
+    "name": "Cable Hip Abduction",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Gluteus Medius",
+      "Secondary": ["Gluteus Maximus"]
+    }
+  },
+  {
+    "name": "Cable Hip Adduction",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Adductors",
+      "Secondary": []
+    }
+  },
+  {
+    "name": "Cable Bicep Curl",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Biceps Brachii",
+      "Secondary": ["Brachioradialis", "Forearms"]
+    }
+  },
+  {
+    "name": "Single-Arm Cable Curl",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Biceps Brachii",
+      "Secondary": ["Brachioradialis"]
+    }
+  },
+  {
+    "name": "Rope Hammer Curl",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Brachioradialis",
+      "Secondary": ["Biceps Brachii", "Forearms"]
+    }
+  },
+  {
+    "name": "Bayesian Curl (Behind-the-back)",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Biceps Brachii",
+      "Secondary": ["Forearms"]
+    }
+  },
+  {
+    "name": "High Cable Curl (Crucifix Curl)",
+    "type": "weight_reps",
+    "equipment": "Cable",
+    "muscles": {
+      "Primary": "Biceps Brachii",
+      "Secondary": ["Front Delts"]
+    }
+  },
+  {
+    "name": "Back Extension (Hyperextension)",
+    "type": "bodyweight_reps",
+    "equipment": "Bodyweight",
+    "muscles": {
+      "Primary": "Erector Spinae",
+      "Secondary": ["Gluteus Maximus", "Hamstrings"]
+    }
+  },
+  {
+    "name": "Weighted Back Extension",
+    "type": "weight_reps",
+    "equipment": "Other",
+    "muscles": {
+      "Primary": "Erector Spinae",
+      "Secondary": ["Gluteus Maximus", "Hamstrings"]
+    }
+  },
+  {
+    "name": "Machine Back Extension",
+    "type": "weight_reps",
+    "equipment": "Machine",
+    "muscles": {
+      "Primary": "Erector Spinae",
+      "Secondary": ["Gluteus Maximus"]
+    }
+  },
+  {
+    "name": "Barbell Good Morning",
+    "type": "weight_reps",
+    "equipment": "Olympic Barbell",
+    "muscles": {
+      "Primary": "Erector Spinae",
+      "Secondary": ["Hamstrings", "Gluteus Maximus"]
+    }
+  },
+  {
+    "name": "Superman",
+    "type": "duration",
+    "equipment": "Bodyweight",
+    "muscles": {
+      "Primary": "Erector Spinae",
+      "Secondary": ["Gluteus Maximus"]
+    }
+  },
+  {
+    "name": "Seated Machine Row",
+    "type": "weight_reps",
+    "equipment": "Machine",
+    "muscles": {
+      "Primary": "Rhomboids",
+      "Secondary": ["Latissimus Dorsi", "Biceps Brachii", "Deltoid Posterior"]
+    }
+  },
+  {
+    "name": "Dumbbell Split Squat",
+    "type": "weight_reps",
+    "equipment": "Dumbbell",
+    "muscles": {
+      "Primary": "Quadriceps",
+      "Secondary": ["Gluteus Maximus", "Hamstrings"]
+    }
+  },
+  {
+    "name": "Lying Leg Raise",
+    "type": "bodyweight_reps",
+    "equipment": "Bodyweight",
+    "muscles": {
+      "Primary": "Rectus Abdominis",
+      "Secondary": ["Quadriceps"]
+    }
+  },
+  {
+    "name": "Machine High Row",
+    "type": "weight_reps",
+    "equipment": "Machine",
+    "muscles": {
+      "Primary": "Latissimus Dorsi",
+      "Secondary": ["Biceps Brachii", "Rhomboids"]
+    }
+  },
+  {
+    "name": "Kneeling Push-ups",
+    "type": "bodyweight_reps",
+    "equipment": "Bodyweight",
+    "muscles": {
+      "Primary": "Pectoralis Major",
+      "Secondary": ["Triceps Brachii", "Deltoid Anterior"]
+    }
+  },
+  {
+    "name": "Stationary Bike",
+    "type": "distance_duration",
+    "equipment": "Cardio Machine",
+    "muscles": {
+      "Primary": "Cardiovascular System",
+      "Secondary": ["Quadriceps"]
+    }
+  },
+  {
+    "name": "Captains Chair Leg Raise",
+    "type": "bodyweight_reps",
+    "equipment": "Bodyweight",
+    "muscles": {
+      "Primary": "Rectus Abdominis",
+      "Secondary": ["Obliques"]
+    }
+  },
+  {
+    "name": "Step-ups",
+    "type": "weight_reps",
+    "equipment": "Dumbbell",
+    "muscles": {
+      "Primary": "Quadriceps",
+      "Secondary": ["Gluteus Maximus"]
+    }
+  }
+]
