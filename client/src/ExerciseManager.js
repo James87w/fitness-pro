@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import { useAuth } from './contexts/AuthContext'; // <--- 引入 Auth Hook
+import { useAuth } from './contexts/AuthContext';
 import { 
   ArrowLeft, Search, Save, Edit2, Archive, X, 
   Dumbbell, Activity, Lock, User, Plus 
@@ -25,9 +25,11 @@ const ExerciseManager = ({ onBack }) => {
   // === 1. 初始化加载 ===
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]); // 依赖 user 确保用户登录后加载
 
   const fetchData = async () => {
+    if (!user) return; // 未登录则不加载
+    
     setLoading(true);
     try {
       // A. 并行加载字典
@@ -43,7 +45,7 @@ const ExerciseManager = ({ onBack }) => {
         muscles: muscleRes.data || []
       });
 
-      // B. 加载动作 (包含 created_by 字段)
+      // B. 加载动作 (核心修改：只查询当前用户创建的自定义动作)
       const { data, error } = await supabase
         .from('exercises')
         .select(`
@@ -56,6 +58,7 @@ const ExerciseManager = ({ onBack }) => {
           )
         `)
         .eq('is_archived', false) // 只看未归档的
+        .eq('created_by', user.id) // <--- 只显示当前用户创建的
         .order('name');
       
       if (error) throw error;
@@ -63,7 +66,6 @@ const ExerciseManager = ({ onBack }) => {
       
     } catch (error) {
       console.error("Error:", error);
-      alert("数据加载失败");
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ const ExerciseManager = ({ onBack }) => {
 
   // === 2. 归档 (仅限自定义) ===
   const handleArchive = async (ex) => {
-    // 双重检查权限
+    // 权限检查
     if (ex.created_by !== user.id) return alert("无权操作此动作");
     
     if (!window.confirm(`确定要归档 "${ex.name}" 吗？归档后将不再显示在录入列表中。`)) return;
@@ -85,7 +87,7 @@ const ExerciseManager = ({ onBack }) => {
 
   // === 3. 开始编辑 ===
   const startEdit = (ex) => {
-    if (ex.created_by !== user.id) return alert("无法编辑系统内置动作");
+    if (ex.created_by !== user.id) return alert("无法编辑系统内置动作"); // 双重保险
 
     const primaryMuscleRel = ex.muscles.find(m => m.role === 'Primary');
     setEditingEx(ex);
@@ -127,12 +129,7 @@ const ExerciseManager = ({ onBack }) => {
 
       if (targetId) {
         // --- 更新模式 ---
-        // 再次检查权限
-        if (editingEx.created_by !== user.id && editingEx.created_by !== null) {
-           // 注意：created_by === null 是系统动作，也不能改
-           // 但为了严谨，这里主要防篡改
-        }
-        if (editingEx.created_by === null) return alert("系统动作不可修改");
+        if (editingEx.created_by === null || editingEx.created_by !== user.id) return alert("无权修改此动作");
 
         const { error } = await supabase.from('exercises').update(payload).eq('id', targetId);
         if (error) throw error;
@@ -149,8 +146,7 @@ const ExerciseManager = ({ onBack }) => {
             ...payload, 
             created_by: user.id 
           })
-          .select()
-          .single();
+          .select().single();
         
         if (error) throw error;
         targetId = newEx.id;
@@ -188,16 +184,13 @@ const ExerciseManager = ({ onBack }) => {
           <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-900">
             <ArrowLeft size={20}/> <span className="font-medium">返回看板</span>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">动作库管理</h1>
-          {/* 新建按钮：仅在非编辑模式显示 */}
-          {!editingEx && (
-            <button 
-              onClick={startCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md font-medium text-sm"
-            >
-              <Plus size={18} /> 新建动作
-            </button>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900">自定义动作库</h1>
+          <button 
+            onClick={startCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md font-medium text-sm"
+          >
+            <Plus size={18} /> 新建动作
+          </button>
         </div>
 
         {/* === 编辑/新建表单 === */}
@@ -268,16 +261,13 @@ const ExerciseManager = ({ onBack }) => {
           <>
             <div className="relative mb-6">
               <div className="absolute left-3 top-3.5 text-gray-400"><Search size={20}/></div>
-              <input type="text" placeholder="搜索动作..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+              <input type="text" placeholder="搜索我的自定义动作..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
             </div>
 
             {loading ? <div className="text-center py-10 text-gray-400">加载动作库...</div> : (
               <div className="space-y-3">
                 {filteredExercises.map(ex => {
-                   // 判断动作归属
-                   const isMine = ex.created_by === user.id;
-                   
                    const primaryMuscle = ex.muscles.find(m => m.role === 'Primary')?.muscle?.common_name || "Unassigned";
                    const typeCode = ex.type?.code;
                    
@@ -286,16 +276,10 @@ const ExerciseManager = ({ onBack }) => {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-bold text-gray-800">{ex.name}</h3>
-                          {/* 权限徽章 */}
-                          {isMine ? (
-                            <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
-                              <User size={10}/> 自定义
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200 flex items-center gap-1">
-                              <Lock size={10}/> 系统
-                            </span>
-                          )}
+                          {/* 徽章只显示 "自定义" (因为系统动作已被过滤) */}
+                          <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
+                            <User size={10}/> 自定义
+                          </span>
                         </div>
 
                         <div className="flex gap-2 mt-2">
@@ -316,31 +300,31 @@ const ExerciseManager = ({ onBack }) => {
                       </div>
                       
                       <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        {isMine ? (
-                          <>
-                            <button onClick={() => startEdit(ex)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="编辑">
-                              <Edit2 size={18}/>
-                            </button>
-                            <button onClick={() => handleArchive(ex)} className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500" title="归档">
-                              <Archive size={18}/>
-                            </button>
-                          </>
-                        ) : (
-                          // 系统动作占位符，保持布局整齐，或者显示锁
-                          <div className="p-2 text-gray-300 cursor-not-allowed" title="系统内置动作不可修改">
-                             <Lock size={18}/>
-                          </div>
-                        )}
+                        <>
+                          <button onClick={() => startEdit(ex)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="编辑">
+                            <Edit2 size={18}/>
+                          </button>
+                          <button onClick={() => handleArchive(ex)} className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500" title="归档">
+                            <Archive size={18}/>
+                          </button>
+                        </>
                       </div>
                     </div>
                    );
                 })}
+                
+                {/* === 空状态提示 === */}
                 {filteredExercises.length === 0 && (
-                  <div className="text-center py-10 text-gray-400">
-                    <p>没有找到相关动作</p>
-                    <button onClick={startCreate} className="mt-4 text-blue-600 hover:underline">去创建一个?</button>
-                  </div>
+                    <div className="py-12 px-6 text-center bg-white rounded-2xl border border-dashed border-gray-200">
+                        <h3 className="font-bold text-lg text-gray-700 mb-2">
+                             您还没有添加任何自定义动作。
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                            点击右上角的 **+ 新建动作** 来创建，或者返回看板使用系统内建动作吧。
+                        </p>
+                    </div>
                 )}
+
               </div>
             )}
           </>

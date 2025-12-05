@@ -493,15 +493,14 @@ const DashboardContent = () => {
       </div>
 
       {/* 4. 底部导航栏 (只剩三个元素) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-2 pb-safe flex justify-around items-end z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
-         
+      <div className="fixed bottom-0 left-0 right-0 bg-white backdrop-blur-lg border-t border-gray-100 px-6 py-2 pb-safe flex justify-around items-end z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">   
          {/* Home */}
          <button onClick={() => { setShowLogger(false); setShowManager(false); setShowProfile(false); }} className={`p-2 flex flex-col items-center gap-1 transition-colors text-blue-600`}>
             <Home size={24} strokeWidth={2.5} /> 
             <span className="text-[10px] font-medium">Home</span>
          </button>
 
-         {/* 悬浮添加按钮 */}
+         {/* + Button */}
          <div className="relative -top-6">
             <button 
               onClick={() => setShowLogger(true)} 

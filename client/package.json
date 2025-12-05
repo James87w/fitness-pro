@@ -1,6 +1,6 @@
 {
   "name": "fitness-pro",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.86.2",
