@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
-  LineChart, Line, XAxis, Tooltip, ResponsiveContainer, 
+  LineChart, Line, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, YAxis,
   PieChart, Pie, Cell 
 } from 'recharts';
 import { 
-  Activity, Calendar, TrendingUp, Plus, History, Home, Dumbbell, User as UserIcon, LogOut,
-  Trash2, Edit2, Save, Settings, Layers 
+  Activity, Calendar, TrendingUp, Plus, History, Home, Dumbbell, User as UserIcon,
+  Trash2, Edit2, Save
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import WorkoutLogger from './WorkoutLogger';
 import ExerciseManager from './ExerciseManager';
-import ProfilePage from './ProfilePage'; // <--- 引入新的 ProfilePage
+import ProfilePage from './ProfilePage'; 
 import { formatWeight, toKg } from './unitUtils'; 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Auth from './Auth';
@@ -64,7 +64,7 @@ const DashboardContent = () => {
   const [loading, setLoading] = useState(true);
   const [showLogger, setShowLogger] = useState(false);
   const [showManager, setShowManager] = useState(false);
-  const [showProfile, setShowProfile] = useState(false); // <--- 新增 Profile 状态
+  const [showProfile, setShowProfile] = useState(false); 
   
   // 数据状态
   const [allSessions, setAllSessions] = useState([]);
@@ -82,7 +82,7 @@ const DashboardContent = () => {
   const [editingSetId, setEditingSetId] = useState(null);
   const [editValues, setEditValues] = useState({});
 
-  // === Effect: 初始加载 ===
+  // === Effect: 初始加载 (保持不变) ===
   const fetchInitialData = useMemo(() => async () => {
     setLoading(true);
     try {
@@ -280,34 +280,34 @@ const DashboardContent = () => {
 
   if (showManager) return <ExerciseManager onBack={() => setShowManager(false)} />;
   
-  if (showProfile) return <ProfilePage onBack={() => setShowProfile(false)} />; // <--- 渲染 Profile Page
+  if (showProfile) return <ProfilePage onBack={() => setShowProfile(false)} />;
 
 
   // === 主渲染逻辑 (UI 优化重点) ===
   return (
     <div className="bg-gray-50 min-h-screen font-sans text-gray-800 pb-28">
       
-      {/* 1. 顶部导航 (Glassmorphism & Profile Button) */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-5 py-3 pt-safe flex justify-between items-center transition-all">
+      {/* 1. 顶部导航 (最终优化版：纯白底 + 简洁标题) */}
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-5 py-3 pt-safe flex justify-between items-center transition-all shadow-sm">
         
-        {/* 左侧：Me (Profile Icon) + Title */}
-        <div className="flex items-center gap-2"> 
+        {/* 左侧：Me (Profile Icon) + Date */}
+        <div className="flex items-center gap-3"> 
+           
            {/* Me Button (Top-Left) */}
            <button onClick={() => setShowProfile(true)} className="p-1 text-gray-700 hover:text-blue-600 rounded-full active:bg-gray-100">
-              <UserIcon size={20} strokeWidth={2} />
+              <UserIcon size={22} strokeWidth={2} />
            </button>
            
+           {/* 仅保留日期信息 (去除 Dashboard 标题) */}
            <div>
               <p className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">
                 {new Date().toLocaleDateString('en-US', {weekday: 'long', month:'short', day:'numeric'})}
               </p>
-              <h1 className="text-xl font-extrabold text-gray-900 flex items-center gap-1">
-                <Activity className="text-blue-600 fill-blue-100" size={20} /> Pro Fitness
-              </h1>
+              {/* 移除 h1，让日期成为视觉中心 */}
            </div>
         </div>
         
-        {/* 右侧：单位切换 */}
+        {/* 右侧：单位切换 (保持不变) */}
         <div 
           onClick={() => setUnit(unit === 'kg' ? 'lbs' : 'kg')} 
           className="cursor-pointer bg-gray-100 active:bg-gray-200 px-3 py-1.5 rounded-full text-xs font-bold text-gray-600 border border-gray-200 transition-colors"
@@ -325,7 +325,7 @@ const DashboardContent = () => {
            </div>
         ) : (
           <>
-            {/* 2. 容量图表卡片 (保持不变) */}
+            {/* 2. 容量图表卡片 (加入了标尺网格线) */}
             <div className="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
                <div className="flex justify-between items-center mb-6">
                  <div>
@@ -348,7 +348,16 @@ const DashboardContent = () => {
                           <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                         </linearGradient>
                      </defs>
+                     
+                     {/* 重新加入水平标尺网格线 (颜色调深) */}
+                     <CartesianGrid 
+                        strokeDasharray="4 4" 
+                        vertical={false}     
+                        stroke="#E5E7EB"  /* 颜色调深 */
+                     />
+                     
                      <XAxis dataKey="date" tick={false} axisLine={false} tickLine={false} /> 
+                     
                      <Tooltip 
                         contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px'}}
                         cursor={{stroke: '#3B82F6', strokeWidth: 2, strokeDasharray: '4 4'}}
@@ -358,11 +367,11 @@ const DashboardContent = () => {
                  </ResponsiveContainer>
                </div>
             </div>
-            
-            {/* 3. 肌肉分布饼图 (保持不变) */}
+
+            {/* 3. 肌肉分布饼图 (优化了容器和半径，防止标签被切) */}
             <div className="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
                 <h3 className="font-bold text-gray-900 text-sm mb-4">Muscle Focus (Sets Count)</h3>
-                <div className="h-60 flex justify-center items-center">
+                <div className="h-72 flex justify-center items-center"> {/* 增加高度 */}
                     {muscleStats.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -370,8 +379,8 @@ const DashboardContent = () => {
                                     data={muscleStats}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={40}
-                                    outerRadius={60} 
+                                    innerRadius={28} // 缩小半径
+                                    outerRadius={50} // 缩小半径
                                     paddingAngle={5}
                                     dataKey="value"
                                     labelLine={false} 
@@ -492,28 +501,27 @@ const DashboardContent = () => {
         )}
       </div>
 
-      {/* 4. 底部导航栏 (只剩三个元素) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white backdrop-blur-lg border-t border-gray-100 px-6 py-2 pb-safe flex justify-around items-end z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">   
+      {/* 4. 底部导航栏 (最终统一风格和尺寸) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-2 pb-safe flex justify-around items-center z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+         
          {/* Home */}
-         <button onClick={() => { setShowLogger(false); setShowManager(false); setShowProfile(false); }} className={`p-2 flex flex-col items-center gap-1 transition-colors text-blue-600`}>
-            <Home size={24} strokeWidth={2.5} /> 
-            <span className="text-[10px] font-medium">Home</span>
+         <button onClick={() => { setShowLogger(false); setShowManager(false); setShowProfile(false); }} className={`p-1 flex flex-col items-center gap-0.5 transition-colors ${!showLogger && !showManager && !showProfile ? 'text-blue-600' : 'text-gray-400'}`}>
+            <Home size={20} strokeWidth={2} /> 
+            <span className="text-[9px] font-medium">Home</span>
          </button>
 
-         {/* + Button */}
-         <div className="relative -top-6">
-            <button 
-              onClick={() => setShowLogger(true)} 
-              className="w-14 h-14 bg-gray-900 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-gray-900/30 active:scale-95 transition-all"
-            >
-               <Plus size={28} strokeWidth={3} />
-            </button>
-         </div>
+         {/* 悬浮添加按钮 (缩小尺寸，与 Home 对齐) */}
+         <button 
+            onClick={() => setShowLogger(true)} 
+            className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 active:scale-95 transition-all hover:bg-blue-700"
+         >
+            <Plus size={20} strokeWidth={3} />
+         </button>
 
          {/* Exercises */}
-         <button onClick={() => setShowManager(true)} className="p-2 flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
-            <Dumbbell size={24} strokeWidth={2} />
-            <span className="text-[10px] font-medium">Exercises</span>
+         <button onClick={() => setShowManager(true)} className={`p-1 flex flex-col items-center gap-0.5 transition-colors ${showManager ? 'text-blue-600' : 'text-gray-400'}`}>
+            <Dumbbell size={20} strokeWidth={2} />
+            <span className="text-[9px] font-medium">Exercises</span>
          </button>
       </div>
 

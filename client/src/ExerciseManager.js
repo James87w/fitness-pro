@@ -1,13 +1,14 @@
+// src/ExerciseManager.js 
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { useAuth } from './contexts/AuthContext';
 import { 
   ArrowLeft, Search, Save, Edit2, Archive, X, 
-  Dumbbell, Activity, Lock, User, Plus 
+  Dumbbell, Activity, Lock, User, Plus, Home as HomeIcon, User as UserIcon
 } from 'lucide-react';
 
 const ExerciseManager = ({ onBack }) => {
-  // === Auth ===
   const { user } = useAuth();
 
   // === 状态 ===
@@ -25,10 +26,10 @@ const ExerciseManager = ({ onBack }) => {
   // === 1. 初始化加载 ===
   useEffect(() => {
     fetchData();
-  }, [user]); // 依赖 user 确保用户登录后加载
+  }, [user]); 
 
   const fetchData = async () => {
-    if (!user) return; // 未登录则不加载
+    if (!user) return; 
     
     setLoading(true);
     try {
@@ -45,7 +46,7 @@ const ExerciseManager = ({ onBack }) => {
         muscles: muscleRes.data || []
       });
 
-      // B. 加载动作 (核心修改：只查询当前用户创建的自定义动作)
+      // B. 加载动作 (只查询当前用户创建的自定义动作)
       const { data, error } = await supabase
         .from('exercises')
         .select(`
@@ -57,8 +58,8 @@ const ExerciseManager = ({ onBack }) => {
             muscle:muscles(id, common_name)
           )
         `)
-        .eq('is_archived', false) // 只看未归档的
-        .eq('created_by', user.id) // <--- 只显示当前用户创建的
+        .eq('is_archived', false)
+        .eq('created_by', user.id)
         .order('name');
       
       if (error) throw error;
@@ -71,23 +72,22 @@ const ExerciseManager = ({ onBack }) => {
     }
   };
 
-  // === 2. 归档 (仅限自定义) ===
+  // === 2. 归档 ===
   const handleArchive = async (ex) => {
-    // 权限检查
     if (ex.created_by !== user.id) return alert("无权操作此动作");
     
-    if (!window.confirm(`确定要归档 "${ex.name}" 吗？归档后将不再显示在录入列表中。`)) return;
+    if (!window.confirm(`确定要归档 "${ex.name}" 吗？`)) return;
     try {
       const { error } = await supabase.from('exercises').update({ is_archived: true }).eq('id', ex.id);
       if (error) throw error;
       
-      setExercises(exercises.filter(item => item.id !== ex.id)); // 本地移除
+      setExercises(exercises.filter(item => item.id !== ex.id)); 
     } catch (err) { alert(err.message); }
   };
 
   // === 3. 开始编辑 ===
   const startEdit = (ex) => {
-    if (ex.created_by !== user.id) return alert("无法编辑系统内置动作"); // 双重保险
+    if (ex.created_by !== user.id) return alert("无法编辑系统内置动作"); 
 
     const primaryMuscleRel = ex.muscles.find(m => m.role === 'Primary');
     setEditingEx(ex);
@@ -102,7 +102,7 @@ const ExerciseManager = ({ onBack }) => {
 
   // === 4. 开始新建 ===
   const startCreate = () => {
-    setEditingEx({ id: null }); // ID 为 null 标记为新建模式
+    setEditingEx({ id: null }); 
     setFormValues({
       name: "",
       type_id: dicts.types[0]?.id,
@@ -117,7 +117,6 @@ const ExerciseManager = ({ onBack }) => {
     if (!formValues.name.trim()) return alert("请输入动作名称");
 
     try {
-      // 构造基础 Payload
       const payload = {
         name: formValues.name,
         type_id: formValues.type_id,
@@ -128,31 +127,23 @@ const ExerciseManager = ({ onBack }) => {
       let targetId = editingEx.id;
 
       if (targetId) {
-        // --- 更新模式 ---
         if (editingEx.created_by === null || editingEx.created_by !== user.id) return alert("无权修改此动作");
 
         const { error } = await supabase.from('exercises').update(payload).eq('id', targetId);
         if (error) throw error;
 
-        // 更新关联：先删后加
         await supabase.from('exercise_muscles').delete().eq('exercise_id', targetId).eq('role', 'Primary');
 
       } else {
-        // --- 新建模式 ---
-        // 核心：显式写入 created_by
         const { data: newEx, error } = await supabase
           .from('exercises')
-          .insert({ 
-            ...payload, 
-            created_by: user.id 
-          })
+          .insert({ ...payload, created_by: user.id }) 
           .select().single();
         
         if (error) throw error;
         targetId = newEx.id;
       }
 
-      // 统一处理关联插入 (Primary Muscle)
       if (formValues.primary_muscle_id && targetId) {
         await supabase.from('exercise_muscles').insert({
           exercise_id: targetId,
@@ -161,7 +152,6 @@ const ExerciseManager = ({ onBack }) => {
         });
       }
 
-      // 刷新并关闭
       await fetchData();
       setEditingEx(null);
 
@@ -176,13 +166,13 @@ const ExerciseManager = ({ onBack }) => {
   );
 
   return (
-    <div className="bg-white min-h-screen p-6 font-sans text-gray-800">
+    <div className="bg-white min-h-screen p-6 font-sans text-gray-800 pb-20"> {/* 增加底部 padding */}
       <div className="max-w-3xl mx-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-900">
-            <ArrowLeft size={20}/> <span className="font-medium">返回看板</span>
+          <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 active:bg-gray-100 rounded-full p-2">
+            <ArrowLeft size={20}/>
           </button>
           <h1 className="text-2xl font-bold text-gray-900">自定义动作库</h1>
           <button 
@@ -276,7 +266,6 @@ const ExerciseManager = ({ onBack }) => {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-bold text-gray-800">{ex.name}</h3>
-                          {/* 徽章只显示 "自定义" (因为系统动作已被过滤) */}
                           <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
                             <User size={10}/> 自定义
                           </span>
@@ -313,7 +302,7 @@ const ExerciseManager = ({ onBack }) => {
                    );
                 })}
                 
-                {/* === 空状态提示 === */}
+                {/* 空状态提示 */}
                 {filteredExercises.length === 0 && (
                     <div className="py-12 px-6 text-center bg-white rounded-2xl border border-dashed border-gray-200">
                         <h3 className="font-bold text-lg text-gray-700 mb-2">
@@ -330,6 +319,28 @@ const ExerciseManager = ({ onBack }) => {
           </>
         )}
       </div>
+
+      {/* 底部导航栏 (统一风格) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-2 pb-safe flex justify-around items-center z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+         
+         {/* Home */}
+         <button onClick={onBack} className="p-1 flex flex-col items-center gap-0.5 transition-colors text-gray-400 hover:text-gray-600">
+            <HomeIcon size={20} strokeWidth={2} /> 
+            <span className="text-[9px] font-medium">Home</span>
+         </button>
+
+         {/* 悬浮添加按钮 (Placeholder for Logger) */}
+         <button onClick={onBack} className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 active:scale-95 transition-all hover:bg-blue-700">
+            <Plus size={20} strokeWidth={3} />
+         </button>
+
+         {/* Exercises (Active State for current page) */}
+         <button className="p-1 flex flex-col items-center gap-0.5 transition-colors text-blue-600">
+            <Dumbbell size={20} strokeWidth={2} />
+            <span className="text-[9px] font-medium">Exercises</span>
+         </button>
+      </div>
+
     </div>
   );
 };

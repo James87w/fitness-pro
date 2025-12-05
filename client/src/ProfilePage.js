@@ -1,9 +1,10 @@
-// src/ProfilePage.js
+// src/ProfilePage.js 
 
 import React from 'react';
 import { useAuth } from './contexts/AuthContext';
-import { ArrowLeft, LogOut, Mail, User, Settings } from 'lucide-react';
+import { ArrowLeft, LogOut, Mail, User, Settings, Home as HomeIcon, Dumbbell, Plus } from 'lucide-react';
 
+// 辅助函数：从邮箱中提取用户名
 const getUsername = (email) => email ? email.split('@')[0] : 'User';
 
 const ProfilePage = ({ onBack }) => {
@@ -16,17 +17,17 @@ const ProfilePage = ({ onBack }) => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen font-sans text-gray-800 p-5">
+    <div className="bg-gray-50 min-h-screen font-sans text-gray-800 p-5 pb-20"> {/* 增加底部 padding */}
       
       {/* Header */}
       <div className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
-        <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-900">
-          <ArrowLeft size={20}/> <span className="font-medium">Dashboard</span>
+        <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 active:bg-gray-100 rounded-full p-2">
+          <ArrowLeft size={20}/>
         </button>
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
            <Settings size={22} className="text-blue-500"/> My Profile
         </h1>
-        <div className="w-10"></div>
+        <div className="w-8"></div>
       </div>
 
       <div className="max-w-md mx-auto space-y-6">
@@ -45,8 +46,9 @@ const ProfilePage = ({ onBack }) => {
           
           <div className="space-y-3">
              <div className="text-sm text-gray-700 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                当前版本: v0.1.1 (UI, RLS, Perf Fix)
+                当前版本: v0.1.2 (UI, RLS, Perf Fix)
              </div>
+             {/* 可以在这里添加更多设置选项 */}
           </div>
         </div>
 
@@ -59,6 +61,28 @@ const ProfilePage = ({ onBack }) => {
         </button>
 
       </div>
+
+      {/* 底部导航栏 (统一风格) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-2 pb-safe flex justify-around items-center z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
+         
+         {/* Home */}
+         <button onClick={onBack} className="p-1 flex flex-col items-center gap-0.5 transition-colors text-gray-400 hover:text-gray-600">
+            <HomeIcon size={20} strokeWidth={2} /> 
+            <span className="text-[9px] font-medium">Home</span>
+         </button>
+
+         {/* 悬浮添加按钮 (Placeholder for Logger) */}
+         <button onClick={onBack} className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 active:scale-95 transition-all hover:bg-blue-700">
+            <Plus size={20} strokeWidth={3} />
+         </button>
+
+         {/* Exercises (Placeholder for Manager) */}
+         <button onClick={onBack} className="p-1 flex flex-col items-center gap-0.5 transition-colors text-gray-400 hover:text-gray-600">
+            <Dumbbell size={20} strokeWidth={2} />
+            <span className="text-[9px] font-medium">Exercises</span>
+         </button>
+      </div>
+
     </div>
   );
 };

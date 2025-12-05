@@ -1,12 +1,15 @@
+// src/WorkoutLogger.js 
+
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase, CURRENT_USER_ID } from './supabaseClient';
-import { useExercises } from './hooks/useExercises'; // <--- 引入刚才写的 Hook
-import { toKg, formatWeight } from './unitUtils';
-import { Save, Plus, ArrowLeft, Trash2, X, Check, Search, Timer, Dumbbell, MapPin } from 'lucide-react';
+import { supabase } from './supabaseClient';
+import { useExercises } from './hooks/useExercises'; 
 import { useAuth } from './contexts/AuthContext';
+import { toKg, formatWeight } from './unitUtils';
+import { Save, Plus, ArrowLeft, Trash2, X, Check, Search, Timer, Dumbbell, Home, User as UserIcon } from 'lucide-react';
 
 const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
   const { user } = useAuth();
+  
   // === 1. 使用 Hook 加载数据 ===
   const { exercises, loading: loadingEx } = useExercises();
 
@@ -107,12 +110,11 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
   };
 
   // 保存训练 (适配 V3 结构)
-    const handleSaveWorkout = async () => {
+  const handleSaveWorkout = async () => {
     if (sessionQueue.length === 0) return;
     setIsSaving(true);
     try {
-      // 1. [优化] 查找或创建 Session (使用 Upsert 原子操作)
-      // 利用 unique_user_date 约束：如果存在则更新(并返回id)，不存在则插入(并返回id)
+      // 1. 原子化 Upsert (查找或创建)
       const { data: sessionData, error: sessErr } = await supabase
         .from('workout_sessions')
         .upsert(
@@ -121,16 +123,16 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
             date: date, 
             title: title 
           }, 
-          { onConflict: 'user_id, date' } // 必须对应数据库的唯一约束
+          { onConflict: 'user_id, date' }
         )
-        .select() // 必须加 select() 才能拿到返回的 id
+        .select()
         .single();
 
       if (sessErr) throw sessErr;
       
       const sessionId = sessionData.id;
 
-      // 2. 插入 Sets (保持原样)
+      // 2. 插入 Sets
       const setsToInsert = sessionQueue.map(item => ({
         session_id: sessionId,
         exercise_id: item.exercise_id,
@@ -147,14 +149,13 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
 
       onComplete();
     } catch (err) {
-      console.error(err); // 方便调试看具体错误
       alert("保存失败: " + err.message);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // === 动态渲染输入框组件 ===
+  // === 动态渲染输入框组件 (保持不变) ===
   const renderInputs = () => {
     if (!selectedExercise) return <div className="text-gray-400 text-sm py-4">请先搜索并选择一个动作</div>;
 
@@ -228,7 +229,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
     return <div className="text-red-500">未知的动作类型</div>;
   };
 
-  // === 辅助渲染列表项 ===
+  // === 辅助渲染列表项 (保持不变) ===
   const renderListItem = (item) => {
     let desc = "";
     if (item.type_code === 'weight_reps') desc = `${formatWeight(item.weight_kg, unit)} ${unit} × ${item.reps} 次`;
@@ -245,12 +246,12 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
   };
 
   return (
-    <div className="bg-white min-h-screen p-6">
-      <div className="max-w-md mx-auto">
+    <div className="bg-white min-h-screen font-sans text-gray-800 pb-20"> {/* pb-20 for save button */}
+      <div className="max-w-md mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={onCancel} className="text-gray-500 hover:text-gray-700"><ArrowLeft /></button>
-          <h2 className="text-xl font-bold">记录 V3.0 训练</h2>
-          <div className="w-6"></div>
+          <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 active:bg-gray-100 rounded-full p-2"><ArrowLeft /></button>
+          <h2 className="text-xl font-bold">记录训练</h2> {/* 标题简化 */}
+          <div className="w-8"></div>
         </div>
 
         {/* 日期标题 */}
@@ -297,7 +298,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
               )}
             </div>
 
-            {/* 动态输入区域 (这是最酷的部分) */}
+            {/* 动态输入区域 */}
             {renderInputs()}
 
             <button onClick={handleAddSet} disabled={!selectedExercise} className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -321,11 +322,16 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
            ))}
         </div>
 
-        {/* 底部按钮 */}
-        <div className="fixed bottom-6 left-0 right-0 px-6">
+        {/* 底部按钮 (全宽，统一风格) */}
+        <div className="fixed bottom-0 left-0 right-0 px-6 py-4 bg-white border-t border-gray-100 z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)]">
           <div className="max-w-md mx-auto">
-             <button onClick={handleSaveWorkout} disabled={sessionQueue.length === 0 || isSaving} className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold shadow-xl hover:bg-black disabled:opacity-70">
-                {isSaving ? "保存中..." : <><Save size={20} /> 完成 V3 训练</>}
+             <button 
+                onClick={handleSaveWorkout} 
+                disabled={sessionQueue.length === 0 || isSaving} 
+                // 统一的蓝色风格
+                className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSaving ? "保存中..." : <><Save size={20} /> 完成训练</>}
             </button>
           </div>
         </div>
