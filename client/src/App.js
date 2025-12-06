@@ -8,7 +8,7 @@ import {
   Trash2, Edit2, Save
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
-import WorkoutLogger from './WorkoutLogger';
+import LoggerShell from './logger/LoggerShell';
 import ExerciseManager from './ExerciseManager';
 import ProfilePage from './ProfilePage'; 
 import { formatWeight, toKg } from './unitUtils'; 
@@ -270,7 +270,7 @@ const DashboardContent = () => {
   // === 子页面渲染：优先级最高 ===
   if (showLogger) {
     return (
-      <WorkoutLogger 
+      <LoggerShell 
         unit={unit} 
         onComplete={() => { setShowLogger(false); fetchInitialData(); }} 
         onCancel={() => setShowLogger(false)} 

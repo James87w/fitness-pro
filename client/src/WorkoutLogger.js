@@ -5,7 +5,7 @@ import { supabase } from './supabaseClient';
 import { useExercises } from './hooks/useExercises'; 
 import { useAuth } from './contexts/AuthContext';
 import { toKg, formatWeight } from './unitUtils';
-import { Save, Plus, ArrowLeft, Trash2, X, Check, Search, Clock, Dumbbell, Timer, ArrowRight } from 'lucide-react';
+import { Save, Plus, ArrowLeft, Trash2, X, Check, Search, Dumbbell, Timer, ArrowRight, Play, Square, RotateCcw } from 'lucide-react';
 
 
 // === 辅助函数 A：格式化秒数 (00:00) ===
@@ -52,11 +52,12 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
   
   // === 计时器状态 ===
   const { time, isRunning, start, stop, reset } = useTimer();
-  const [timerMode, setTimerMode] = useState('ACTION'); // 'ACTION' (做组) | 'REST' (休息)
+  const [timerMode, setTimerMode] = useState('ACTION'); // ACTION | REST
+  const [currentActive, setCurrentActive] = useState(null); // {id, type: 'SET'|'REST_BLOCK'}
   
   // 基础状态
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [title, setTitle] = useState("力量训练");
+  const [title, setTitle] = useState("Strength Training");
   const [sessionQueue, setSessionQueue] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -107,98 +108,120 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
 
     if (isRunning) reset();
     setTimerMode('ACTION');
+    setCurrentActive(null);
   };
   
-  
-  // === 核心逻辑：记录并切换计时器 (Unified Button Logic) ===
-  const handleLogAndSwitch = () => {
-    if (!selectedExercise) return;
-    
-    let newQueue = [...sessionQueue];
-    const capturedTime = time; 
-    
-    stop(); 
+  const validateInputs = (type) => {
+    if (type === 'weight_reps') return inputWeight && inputReps;
+    if (type === 'bodyweight_reps') return inputReps;
+    if (type === 'duration') return inputDuration;
+    if (type === 'distance_duration') return inputDistance && inputDuration;
+    return false;
+  };
 
-    // 1. 处理首次点击 (只启动计时器，不记录)
-    if (sessionQueue.length === 0 && !isRunning) {
-        start();
-        return; 
+  const buildSetPayload = () => {
+    const type = selectedExercise.typeCode;
+    const payload = {
+      type: 'SET',
+      exercise_id: selectedExercise.id,
+      exercise_name: selectedExercise.name,
+      type_code: type,
+      id: Date.now() + Math.random(),
+      action_time_seconds: 0,
+      rest_time_seconds: 0
+    };
+    if (type === 'weight_reps') {
+      payload.weight_kg = toKg(inputWeight, unit);
+      payload.reps = parseInt(inputReps, 10);
+    } else if (type === 'bodyweight_reps') {
+      payload.weight_kg = 0;
+      payload.reps = parseInt(inputReps, 10);
+    } else if (type === 'duration') {
+      payload.duration_seconds = parseInt(inputDuration, 10);
+    } else if (type === 'distance_duration') {
+      payload.distance_meters = parseFloat(inputDistance); // meters
+      payload.duration_seconds = parseInt(inputDuration, 10); // seconds
     }
+    return payload;
+  };
 
-    // 2. ACTION MODE (记录 Set Item / 切换到 REST)
+  const updateItemTime = (itemId, updater) => {
+    setSessionQueue(prev => prev.map(item => item.id === itemId ? updater(item) : item));
+  };
+
+  
+  // === 计时按钮逻辑 ===
+  const handlePlay = () => {
+    if (!selectedExercise) return alert("Please select an exercise first.");
+    const type = selectedExercise.typeCode;
+
     if (timerMode === 'ACTION') {
-      
-      // 校验输入数据 (W/R)
-      const type = selectedExercise.typeCode;
-      if ((type === 'weight_reps' && (!inputWeight || !inputReps)) || 
-          (type === 'bodyweight_reps' && !inputReps)) {
-          start(); 
-          alert("请确保重量/次数已填写！");
-          return;
+      if (!validateInputs(type)) {
+        alert("Please fill required fields (weight/reps or duration).");
+        return;
       }
-      
-      // 构建数据 (Set)
-      let setPayload = {
-        type: 'SET', 
-        exercise_id: selectedExercise.id,
-        exercise_name: selectedExercise.name,
-        type_code: type,
-        id: Date.now() + Math.random(), 
-        
-        // 关键时间数据 (Action Time)
-        action_time_seconds: capturedTime, 
-        rest_time_seconds: 0 
-      };
-      
-      // 校验与赋值 
-      if (type === 'weight_reps') {
-        setPayload.weight_kg = toKg(inputWeight, unit); 
-        setPayload.reps = parseInt(inputReps);
-      } 
-      else if (type === 'bodyweight_reps') {
-          setPayload.weight_kg = 0;
-          setPayload.reps = parseInt(inputReps);
+      if (isRunning && currentActive?.type === 'SET') return;
+      const setPayload = buildSetPayload();
+      setSessionQueue(prev => [...prev, setPayload]);
+      setCurrentActive({ id: setPayload.id, type: 'SET' });
+      reset();
+      start();
+    } else {
+      // complete rest, start next action
+      if (currentActive?.type === 'REST_BLOCK') {
+        stop();
+        const captured = time;
+        updateItemTime(currentActive.id, (item) => ({ ...item, time: captured }));
       }
-      else if (type === 'duration') {
-          setPayload.duration_seconds = parseInt(inputDuration);
+      if (!validateInputs(type)) {
+        alert("Please fill required fields (weight/reps or duration).");
+        reset();
+        setTimerMode('ACTION');
+        setCurrentActive(null);
+        return;
       }
-      else if (type === 'distance_duration') {
-          setPayload.distance_meters = parseFloat(inputDistance) * 1000;
-          setPayload.duration_seconds = parseInt(inputDuration);
-      }
-      
-      newQueue.push(setPayload);
-      setTimerMode('REST'); // 下一个周期是休息
-    } 
-    
-    // 3. REST MODE (记录休息 Block / 切换到 ACTION)
-    else if (timerMode === 'REST') {
-        
-      // Log Rest Block
-      if (capturedTime > 0) {
-        newQueue.push({ 
-            type: 'REST_BLOCK', 
-            time: capturedTime, 
-            id: Date.now() + Math.random() 
-        });
-      }
-      
-      setTimerMode('ACTION'); // 下一个周期是做组
+      const setPayload = buildSetPayload();
+      setSessionQueue(prev => [...prev, setPayload]);
+      setCurrentActive({ id: setPayload.id, type: 'SET' });
+      setTimerMode('ACTION');
+      reset();
+      start();
     }
-
-    // 4. 统一清理与启动
-    setSessionQueue(newQueue);
-    reset(); 
-    start(); // 启动下一次计时
   };
-  
-  
-  // === 辅助 Effect：确保计时器在首次点击或模式切换后启动 ===
-  useEffect(() => {
-      if (timerMode === 'REST' && !isRunning) {
-          start();
+
+  const handleStop = () => {
+    if (!isRunning) return;
+    if (timerMode === 'ACTION' && currentActive?.type === 'SET') {
+      stop();
+      const captured = time;
+      updateItemTime(currentActive.id, (item) => ({ ...item, action_time_seconds: captured }));
+      const restBlock = { id: Date.now() + Math.random(), type: 'REST_BLOCK', time: 0 };
+      setSessionQueue(prev => [...prev, restBlock]);
+      setCurrentActive({ id: restBlock.id, type: 'REST_BLOCK' });
+      setTimerMode('REST');
+      reset();
+      start();
+    } else if (timerMode === 'REST' && currentActive?.type === 'REST_BLOCK') {
+      stop();
+      const captured = time;
+      updateItemTime(currentActive.id, (item) => ({ ...item, time: captured }));
+      reset();
+    }
+  };
+
+  const handleReset = () => {
+    if (currentActive) {
+      const captured = time;
+      if (timerMode === 'ACTION' && currentActive.type === 'SET') {
+        updateItemTime(currentActive.id, (item) => ({ ...item, action_time_seconds: captured }));
       }
-  }, [timerMode, isRunning, start]);
+      if (timerMode === 'REST' && currentActive.type === 'REST_BLOCK') {
+        updateItemTime(currentActive.id, (item) => ({ ...item, time: captured }));
+      }
+    }
+    stop();
+    reset();
+  };
 
 
   // === 保存训练 (需要过滤掉 REST_BLOCK) ===
@@ -210,7 +233,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
     
     if (isRunning) {
       stop();
-      alert("计时器已停止，本次未记录的动作/休息时间将丢失。");
+      alert("Timer stopped. Unrecorded time will be lost.");
     }
     
     try {
@@ -263,7 +286,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
 
       onComplete();
     } catch (err) {
-      alert("保存失败: " + err.message);
+      alert("Save failed: " + err.message);
     } finally {
       setIsSaving(false);
     }
@@ -271,7 +294,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
 
   // === 动态渲染输入框组件 (保持不变) ===
   const renderInputs = () => {
-    if (!selectedExercise) return <div className="text-gray-400 text-sm py-4">请先搜索并选择一个动作</div>;
+    if (!selectedExercise) return <div className="text-gray-400 text-sm py-4">Please select an exercise</div>;
 
     const type = selectedExercise.typeCode;
     
@@ -280,15 +303,15 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
         <div className="flex gap-3 animate-fade-in">
            {type === 'weight_reps' && (
              <div className="w-1/2 relative">
-               <input type="number" placeholder="重量" value={inputWeight} onChange={e => setInputWeight(e.target.value)}
+               <input type="number" placeholder="Weight" value={inputWeight} onChange={e => setInputWeight(e.target.value)}
                  className="w-full p-3 border border-blue-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" />
                <span className="absolute right-3 top-3 text-gray-400 text-sm">{unit}</span>
              </div>
            )}
            <div className={type === 'weight_reps' ? "w-1/2 relative" : "w-full relative"}>
-             <input type="number" placeholder="次数" value={inputReps} onChange={e => setInputReps(e.target.value)}
+             <input type="number" placeholder="Reps" value={inputReps} onChange={e => setInputReps(e.target.value)}
                className="w-full p-3 border border-blue-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" />
-             <span className="absolute right-3 top-3 text-gray-400 text-sm">reps</span>
+             <span className="absolute right-3 top-3 text-gray-400 text-sm">Reps</span>
            </div>
          </div>
        );
@@ -297,7 +320,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
     if (type === 'duration') {
       return (
         <div className="w-full relative animate-fade-in">
-          <input type="number" placeholder="时长 (秒)" value={inputDuration} onChange={e => setInputDuration(e.target.value)}
+          <input type="number" placeholder="Duration (sec)" value={inputDuration} onChange={e => setInputDuration(e.target.value)}
             className="w-full p-3 border border-purple-200 rounded-lg outline-none focus:ring-2 focus:ring-purple-400" />
           <span className="absolute right-3 top-3 text-gray-400 text-sm"><Timer size={16}/> sec</span>
         </div>
@@ -307,20 +330,20 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
       return (
         <div className="flex gap-3 animate-fade-in">
           <div className="w-1/2 relative">
-            <input type="number" placeholder="距离" value={inputDistance} onChange={e => setInputDistance(e.target.value)}
+            <input type="number" placeholder="Distance (m)" value={inputDistance} onChange={e => setInputDistance(e.target.value)}
               className="w-full p-3 border border-green-200 rounded-lg outline-none focus:ring-2 focus:ring-green-400" />
-            <span className="absolute right-3 top-3 text-gray-400 text-sm">km</span>
+            <span className="absolute right-3 top-3 text-gray-400 text-sm">m</span>
           </div>
           <div className="w-1/2 relative">
-            <input type="number" placeholder="时长 (分)" value={inputDuration} onChange={e => setInputDuration(e.target.value)}
+            <input type="number" placeholder="Duration (sec)" value={inputDuration} onChange={e => setInputDuration(e.target.value)}
               className="w-full p-3 border border-green-200 rounded-lg outline-none focus:ring-2 focus:ring-green-400" />
-            <span className="absolute right-3 top-3 text-gray-400 text-sm">min</span>
+            <span className="absolute right-3 top-3 text-gray-400 text-sm">sec</span>
           </div>
         </div>
       );
     }
     
-    return <div className="text-red-500">未知的动作类型</div>;
+    return <div className="text-red-500">Unknown exercise type</div>;
   };
 
   // === 辅助渲染列表项 (Set Log) ===
@@ -330,14 +353,14 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
     
     // 1. Determine the main set display line
     if (item.type_code === 'weight_reps' || item.type_code === 'bodyweight_reps') {
-        const weight = item.type_code === 'weight_reps' ? `${formatWeight(item.weight_kg, unit)} ${unit} × ` : '自重 × ';
-        primaryInfo = `${weight}${item.reps} 次`;
+        const weight = item.type_code === 'weight_reps' ? `${formatWeight(item.weight_kg, unit)} ${unit} × ` : 'Bodyweight × ';
+        primaryInfo = `${weight}${item.reps} Reps`;
         
     } else if (item.type_code === 'duration') {
-        primaryInfo = `${item.duration_seconds} 秒`;
+        primaryInfo = `${item.duration_seconds} sec`;
     }
     else if (item.type_code === 'distance_duration') {
-        primaryInfo = `${(item.distance_meters/1000).toFixed(2)} km in ${item.duration_seconds} 分`;
+        primaryInfo = `${item.distance_meters} m in ${item.duration_seconds} sec`;
     }
     
     return (
@@ -383,9 +406,9 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
           <div key={item.id} className="w-full bg-red-50 p-3 my-1 border-l-4 border-dashed border-red-300 rounded-md flex justify-between items-center text-red-700">
               <span className="flex items-center gap-2 text-sm font-bold">
                  <ArrowRight size={16} className='transform rotate-90'/>
-                 组间休息
+                 Rest
               </span>
-              {/* 休息时间显示，统一使用 base/medium 风格 */}
+              {/* rest time */}
               <span className="font-medium text-base font-mono"> 
                  {formatTime(item.time)}
               </span>
@@ -399,11 +422,11 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
       <div className="max-w-md mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 active:bg-gray-100 rounded-full p-2"><ArrowLeft /></button>
-          <h2 className="text-xl font-bold">记录训练</h2> 
+          <h2 className="text-xl font-bold">Workout Logger</h2> 
           <div className="w-8"></div>
         </div>
 
-        {/* 日期标题 */}
+        {/* Date & Title */}
         <div className="flex gap-4 mb-6">
           <input type="date" value={date} onChange={e => setDate(e.target.value)} className="flex-1 p-3 border border-gray-300 rounded-lg outline-none" />
           <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="flex-1 p-3 border border-gray-300 rounded-lg outline-none" />
@@ -412,28 +435,37 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
 
         {/* 动作选择区 */}
         <div className="bg-gray-50 p-4 rounded-xl mb-6 shadow-sm border border-gray-200 relative">
-          <h3 className="font-semibold text-gray-800 mb-3">动作录入</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">Exercise Input</h3>
           
           <div className="space-y-4" ref={dropdownRef}>
             {/* 1. 动作搜索 */}
             <div className="relative">
-              <div className="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden">
-                 <div className="pl-3 text-gray-400"><Search size={18} /></div>
+              <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 gap-2">
+                 <div className="text-gray-400"><Search size={18} /></div>
                  <input 
                     type="text" value={searchTerm} onChange={handleSearchChange} onFocus={() => setShowDropdown(true)}
-                    placeholder="搜索动作 (如 Bench Press)..."
-                    className="w-full p-3 outline-none text-gray-800 placeholder-gray-400"
+                    placeholder="Search exercise..."
+                    className="flex-1 p-3 outline-none text-gray-800 placeholder-gray-400"
                  />
-                 {selectedExercise && <div className="pr-3 text-green-500"><Check size={18} /></div>}
-                 {searchTerm && !selectedExercise && (
-                    <button onClick={() => { setSearchTerm(""); setFilteredExercises(exercises); }} className="pr-3 text-gray-400"><X size={16} /></button>
+                 {selectedExercise && <div className="text-green-500"><Check size={18} /></div>}
+                 {(searchTerm || selectedExercise) && (
+                    <button onClick={() => { 
+                      setSearchTerm(""); 
+                      setFilteredExercises(exercises); 
+                      setSelectedExercise(null);
+                      setShowDropdown(true);
+                      setInputWeight('');
+                      setInputReps('');
+                      setInputDuration('');
+                      setInputDistance('');
+                    }} className="px-3 py-1 text-xs text-white bg-red-500 rounded-full hover:bg-red-600">Clear</button>
                  )}
               </div>
               
               {/* 下拉菜单 */}
               {showDropdown && (
                 <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                  {loadingEx && <li className="p-3 text-gray-400">加载中...</li>}
+                  {loadingEx && <li className="p-3 text-gray-400">Loading...</li>}
                   {!loadingEx && filteredExercises.map(ex => (
                     <li key={ex.id} onClick={() => handleSelectExercise(ex)} className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 flex justify-between">
                       <span>{ex.name}</span>
@@ -441,7 +473,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
                     </li>
                   ))}
                   {!loadingEx && filteredExercises.length === 0 && (
-                     <li className="p-3 text-gray-400 text-sm">找不到动作？请先去管理页添加</li>
+                     <li className="p-3 text-gray-400 text-sm">No exercise found. Add it first.</li>
                   )}
                 </ul>
               )}
@@ -450,7 +482,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
             {/* 2. 动态输入区域 (重量/次数等) */}
             {renderInputs()}
             
-            {/* 3. 计时器显示区 */}
+            {/* 3. Timer display */}
             <div className={`py-3 px-4 rounded-xl text-center font-mono font-bold text-xl transition-all border ${
               timerMode === 'ACTION' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-red-100 text-red-800 border-red-300'
             }`}>
@@ -458,18 +490,26 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
               <span className="text-3xl">{formatTime(time)}</span>
             </div>
 
-            {/* 4. 按钮控制区 (统一 Log/Switch 按钮) */}
-            <div className="flex gap-3">
+            {/* 4. Controls: Play / Stop / Reset */}
+            <div className="grid grid-cols-3 gap-3">
               <button 
-                onClick={handleLogAndSwitch} 
+                onClick={handlePlay}
                 disabled={!selectedExercise}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {timerMode === 'ACTION' ? (
-                  <><Clock size={18} /> 记录动作时间 / 启动休息</>
-                ) : (
-                  <><Plus size={18} /> 记录休息 ({formatTime(time)}) / 启动下一组</>
-                )}
+                <Play size={18} /> Start
+              </button>
+              <button 
+                onClick={handleStop}
+                className="flex-1 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Square size={18} /> Stop
+              </button>
+              <button 
+                onClick={handleReset}
+                className="flex-1 py-3 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-amber-600/50 disabled:bg-amber-200 disabled:text-white"
+              >
+                <RotateCcw size={18} /> Reset
               </button>
             </div>
           </div>
@@ -503,7 +543,7 @@ const WorkoutLogger = ({ onComplete, onCancel, unit = 'lbs' }) => {
                 disabled={sessionQueue.length === 0 || isSaving} 
                 className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isSaving ? "保存中..." : <><Save size={20} /> 完成训练</>}
+                {isSaving ? "Saving..." : <><Save size={20} /> Save Workout</>}
             </button>
           </div>
         </div>
